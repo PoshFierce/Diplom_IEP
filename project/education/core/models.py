@@ -34,6 +34,7 @@ class Course(models.Model):
     semester = models.PositiveSmallIntegerField(default=SemesterChoices.FIRST, choices=SemesterChoices.choices)
     max_students_count = models.PositiveSmallIntegerField(default=25, null=False, blank=False)
     min_students_count = models.PositiveSmallIntegerField(default=1, null=False, blank=False)
+    space_left = models.PositiveSmallIntegerField(default=25, null=False, blank=False)
     past_courses = models.ManyToManyField('self', blank=True)
     future_courses = models.ManyToManyField('self', blank=True)
     keywords = models.ManyToManyField(Keyword, blank=True)

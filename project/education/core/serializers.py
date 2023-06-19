@@ -22,7 +22,6 @@ class CourseSerializer(serializers.ModelSerializer):
     past_courses = SimpleCourseSerializer(many=True)
     future_courses = SimpleCourseSerializer(many=True)
     is_disabled = serializers.SerializerMethodField()
-    space_left = serializers.SerializerMethodField()
     keywords = KeywordSerializer(many=True)
 
     def get_is_disabled(self, obj):
@@ -31,9 +30,6 @@ class CourseSerializer(serializers.ModelSerializer):
             plan, _ = IndividualPlan.objects.get_or_create(user=user)
             courses = plan.courses.values_list('id', flat=True)
             return obj.id in courses or obj.semester < user.studentprofile.semester
-
-    def get_space_left(self, obj):
-        return obj.max_students_count - obj.plans.count()
 
     class Meta:
         model = Course

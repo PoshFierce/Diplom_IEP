@@ -159,9 +159,7 @@ MEDIA_ROOT = PROJECT_DIR / 'static_root/media'
 MEDIA_URL = '/media/'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'core.paginator.Paginator',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
