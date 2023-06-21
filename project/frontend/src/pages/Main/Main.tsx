@@ -19,7 +19,6 @@ export const Main = (): JSX.Element => {
     const handleChange = (value: string[]) => {
         setSelected(value)
     };
-
     const columns = useMemo(
         () =>
             [
@@ -98,31 +97,51 @@ export const Main = (): JSX.Element => {
                         )
                     },
                     sorter: (a, b) => a.avg_score - b.avg_score,
-                }, {
-                title: 'Количество свободных мест',
-                dataIndex: 'space_left',
-                width: '15%',
-                render: function renderSpaceLeft(value, record) {
-                    return (
-                        record.space_left > 10 ? (
-                            <p>
-                                <Text type="success">{record.space_left}</Text> из {record.max_students_count}
-                            </p>
-                        ) : (
-                            record.space_left == 0 ? (
+                },
+                {
+                    title: 'Количество свободных мест',
+                    dataIndex: 'space_left',
+                    width: '15%',
+                    render: function renderSpaceLeft(value, record) {
+                        return (
+                            record.space_left > 10 ? (
                                 <p>
-                                    <Text type="danger">{record.space_left}</Text> из {record.max_students_count}
+                                    <Text type="success">{record.space_left}</Text> из {record.max_students_count}
+                                </p>
+                            ) : (
+                                record.space_left === 0 ? (
+                                    <p>
+                                        <Text type="danger">{record.space_left}</Text> из {record.max_students_count}
+                                    </p>
+                                ) : (
+                                    <p>
+                                        <Text type="warning">{record.space_left}</Text> из {record.max_students_count}
+                                    </p>
+                                )
+                            )
+                        )
+                    },
+                    sorter: (a, b) => a.space_left - b.space_left,
+                },
+                {
+                    title: 'Подходит Вам?',
+                    dataIndex: 'is_prediction',
+                    width: '15%',
+                    render: function renderPrediction(value, record) {
+                        return (
+                            record.is_prediction ? (
+                                <p>
+                                    <Text type="success">Да</Text>
                                 </p>
                             ) : (
                                 <p>
-                                    <Text type="warning">{record.space_left}</Text> из {record.max_students_count}
+                                    <Text type="warning">Нет</Text>
                                 </p>
                             )
                         )
-                    )
+                    },
+                    sorter: (a, b) => a.is_prediction,
                 },
-                sorter: (a, b) => a.space_left - b.space_left,
-            },
                 {
                     title: '',
                     dataIndex: 'more',
@@ -139,9 +158,9 @@ export const Main = (): JSX.Element => {
                     render: function renderJoin(value, record) {
                         let isAnySelected = selected.length > 0;
                         // @ts-ignore
-                        let isCurrentSelected = record?.keywords?.map(item => item.id)?.filter(x => selected.includes(x)).length > 0
-                        console.log(record.title, record.keywords, isCurrentSelected)
-                        return (record.space_left == 0 ?
+                        let isCurrentSelected = record.keywords.map(item => item.id).filter(x => selected.includes(x)).length > 0
+
+                        return (record.space_left === 0 ?
                                 (<Button danger type="primary">
                                     Включить в план
                                 </Button>)
@@ -150,23 +169,48 @@ export const Main = (): JSX.Element => {
                                     (<Button disabled={record.is_disabled}>
                                         Включить в
                                         план</Button>) : (
-                                            record.avg_score >= user.profile.avg_score || isAnySelected && !isCurrentSelected ?
-                                        (<Button type="primary"
-                                                 style={{background: "#fadb14", color: 'black'}}
-                                                 onClick={() => chooseCourse(record.id)}>
-                                            Включить в
-                                            план</Button>) :
-                                        <Button danger={record.space_left == 0}
-                                                type="primary"
-                                                style={{background: "#389e0d"}}
-                                                onClick={() => chooseCourse(record.id)}>Включить в
-                                            план</Button>))
+                                        (record.avg_score >= user.profile.avg_score) || (isAnySelected && !isCurrentSelected) ?
+                                            (<Button type="primary"
+                                                     style={{background: "#fadb14", color: 'black'}}
+                                                     onClick={() => {chooseCourse(record.id); handleUpdate()}}>
+                                                Включить в
+                                                план</Button>) :
+                                            <Button danger={record.space_left === 0}
+                                                    type="primary"
+                                                    style={{background: "#389e0d"}}
+                                                    onClick={() => {chooseCourse(record.id); handleUpdate()}}>Включить в
+                                                план</Button>))
                         )
                     },
                 },
             ] as ColumnsType<Course>,
         [selected],
     );
+    function handleUpdate(){
+        setLoading(true);
+        getCourses();
+        fetchKeywords();
+        const fetchData = async () => {
+            await new Promise(r => setTimeout(r, 200));
+            setData(getCurrentCourses() ?? []);
+            let keywords = getKeywords()
+            let optionsValues: any[] = [];
+            for (let index in keywords) {
+                let keyword = keywords[index]
+                optionsValues.push({
+                    // @ts-ignore
+                    value: keyword?.id,
+                    // @ts-ignore
+                    label: keyword?.title,
+                });
+            }
+            // @ts-ignore
+            setOptions(optionsValues);
+        }
+
+        fetchData();
+        setLoading(false);
+    }
     useEffect(() => {
         setLoading(true);
         getCourses();
@@ -195,7 +239,7 @@ export const Main = (): JSX.Element => {
 
     useEffect(() => {
         setLoading(true);
-        getCourses();
+        getCourses(selected);
         let courses = getCurrentCourses() ?? [];
         let filtered = [];
         let left = [];
@@ -223,7 +267,7 @@ export const Main = (): JSX.Element => {
                 <StyledPageHeader title={<PageHeaderText>Курсы</PageHeaderText>} backIcon={false}/>
                 <Row>
                     <Col offset={1}>
-                        <h3>Ваш средний балл: {user?.profile?.avg_score}</h3>
+                        <h3>Ваш средний балл: {user.profile.avg_score}</h3>
                     </Col>
                     <Col offset={1} span={10}>
                         <Select

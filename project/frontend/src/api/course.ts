@@ -3,8 +3,13 @@ import { AxiosResponse } from 'axios';
 import { message } from 'antd';
 import {setCourses, setCurrentCourse, setCurrentLesson, setKeywords, setMyCourses} from '../utils';
 
-export const getCourses = (): void => {
-    apiClient.get('course/', {params: {'view': true}})
+export const getCourses = (selected: string[]|null = []): void => {
+    let params = {'view': true}
+    if (selected && selected?.length > 0) {
+        // @ts-ignore
+        params = {'view': true, 'keywords': selected?.join(',')}
+    }
+    apiClient.get('course/', {params})
         .then((response: AxiosResponse) => {
             setCourses(response?.data);
         }).catch(()=>{})
@@ -47,8 +52,20 @@ export const chooseCourse = (courseId: number): void => {
     apiClient.patch(`course/${courseId}/`, {})
         .then((response: AxiosResponse) => {
             message.info('Курс успешно выбран');
+            getCourses()
         })
         .catch(() => {
-            message.error('Error with subscribing');
+            message.error('Ошибка включения курса в план');
+        });
+};
+
+export const deleteCourse = (courseId: number): void => {
+    apiClient.delete(`course/${courseId}/`, {})
+        .then((response: AxiosResponse) => {
+            message.info('Курс успешно удален из плана');
+            getMyCourses()
+        })
+        .catch(() => {
+            message.error('Ошибка удаления курса из плана');
         });
 };

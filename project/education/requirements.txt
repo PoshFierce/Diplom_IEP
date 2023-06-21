@@ -66,6 +66,7 @@ isoduration==20.11.0
 itypes==1.2.0
 jedi==0.18.2
 Jinja2==3.1.2
+joblib==1.2.0
 jsonpointer==2.4
 jsonschema==4.17.3
 jupyter==1.0.0
@@ -137,6 +138,7 @@ rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 ruamel.yaml==0.17.4
 ruamel.yaml.clib==0.2.2
+scikit-learn==1.2.2
 scipy==1.10.1
 Send2Trash==1.8.2
 simplejson==3.17.2
@@ -152,6 +154,7 @@ sqlparse==0.4.1
 stack-data==0.6.2
 tenacity==8.2.2
 terminado==0.17.1
+threadpoolctl==3.1.0
 tinycss2==1.2.1
 tornado==6.3.2
 traitlets==5.9.0

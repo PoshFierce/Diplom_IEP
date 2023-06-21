@@ -8,6 +8,9 @@ from rest_framework.views import APIView
 
 from .models import Course, IndividualPlan, Keyword
 from .serializers import CourseSerializer, KeywordSerializer
+from .utils import get_classifier, predict
+
+cls = get_classifier()
 
 
 class KeywordsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,14 +24,35 @@ class CourseViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         queryset = Course.objects.none()
+        predictions = []
         if request.GET.get('view'):
             queryset = Course.objects.filter(is_mandatory=False)
+            if request.user.is_authenticated and request.user.studentprofile:
+                avg_score = request.user.studentprofile.avg_score
+                plan = IndividualPlan.objects.get(user=request.user)
+                plan_courses_titles = list(plan.courses.values_list('title', flat=True))
+
+                keywords_ids = request.GET.get('keywords')
+                key_courses_titles = []
+
+                if keywords_ids:
+                    keywords_ids = keywords_ids.split(',')
+                    keywords_ids = map(int, keywords_ids)
+                    key_courses_titles = list(
+                        Course.objects.filter(keywords__id__in=keywords_ids).distinct().values_list('title', flat=True))
+                titles = plan_courses_titles + key_courses_titles
+                for title in titles:
+                    prediction = predict(cls, title, avg_score)
+                    predictions.append(prediction[0])
+                predictions = set(predictions)
+                # queryset = queryset.exclude(id__in=plan_courses)
+
         elif request.user.is_authenticated:
             plan = IndividualPlan.objects.get(user=request.user)
             plan_courses = list(plan.courses.values_list('id', flat=True))
             queryset = Course.objects.filter(Q(is_mandatory=True) | Q(id__in=plan_courses))
 
-        serializer = CourseSerializer(queryset, many=True, context={'request': request})
+        serializer = CourseSerializer(queryset, many=True, context={'request': request, 'predictions': predictions})
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
@@ -44,6 +68,17 @@ class CourseViewSet(viewsets.ViewSet):
             course = get_object_or_404(queryset, pk=pk)
             plan = IndividualPlan.objects.get(user=request.user)
             plan.courses.add(course)
+            plan.save()
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    def delete(self, request, pk=None):
+        ''' Используется для удаления курса из плана '''
+        if request.user.is_authenticated:
+            queryset = Course.objects.all()
+            course = get_object_or_404(queryset, pk=pk)
+            plan = IndividualPlan.objects.get(user=request.user)
+            plan.courses.remove(course)
             plan.save()
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_403_FORBIDDEN)

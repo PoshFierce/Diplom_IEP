@@ -1,13 +1,12 @@
-import {Layout, Table} from 'antd';
+import {Button, Layout, Table} from 'antd';
 import {HeaderCustom} from '../../components/Header';
 import React, {useEffect, useMemo, useState} from 'react';
 import {InfoBlock, PageHeaderText, StyledContent, StyledPageHeader} from '../Main/styles';
 import {Course} from "../../types/course";
-import {getCourses, getMyCourses} from "../../api";
+import {deleteCourse, getMyCourses} from "../../api";
 import {Link} from "react-router-dom";
 import {ColumnsType} from "antd/lib/table";
-import {getCurrentCourses, getMyCurrentCourses} from "../../utils";
-import {Routes as R} from "../../constants";
+import {getMyCurrentCourses} from "../../utils";
 
 export const MyCourses = (): JSX.Element => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -64,6 +63,7 @@ export const MyCourses = (): JSX.Element => {
                 {
                     title: '',
                     dataIndex: 'join',
+                    width: '10%',
                     render: function renderJoin(value, record) {
                         return (
                             <Link to={'/course/' + record.id + '/'}>
@@ -71,9 +71,32 @@ export const MyCourses = (): JSX.Element => {
                             </Link>);
                     },
                 },
+                {
+                    title: '',
+                    dataIndex: 'delete',
+                    width: '10%',
+                    render: function renderDelete(value, record) {
+                        return !record.is_mandatory && (<Button danger type="primary" onClick={() => {deleteCourse(record.id); handleUpdate()}}>
+                            Удалить из плана
+                        </Button>)
+
+                    },
+                },
             ] as ColumnsType<Course>,
         [],
     );
+
+    function handleUpdate(){
+        setLoading(true);
+        getMyCourses();
+        const fetchData = async () => {
+            await new Promise(r => setTimeout(r, 200));
+            setData(getMyCurrentCourses() ?? []);
+        }
+
+        fetchData();
+        setLoading(false);
+    }
 
     useEffect(() => {
         setLoading(true);
@@ -82,7 +105,6 @@ export const MyCourses = (): JSX.Element => {
             await new Promise(r => setTimeout(r, 200));
             setData(getMyCurrentCourses() ?? []);
         }
-
         fetchData();
         setLoading(false);
     }, []);

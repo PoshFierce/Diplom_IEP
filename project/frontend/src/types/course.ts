@@ -35,6 +35,8 @@ export interface Course {
   teacher: Account;
   listeners: string;
   semester: number;
+  is_mandatory: boolean;
+  is_prediction: boolean;
   is_disabled: boolean;
   is_joined: boolean;
   past_courses: Course[];
