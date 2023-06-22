@@ -18,7 +18,6 @@ class Command(BaseCommand):
         with open(filename, newline='') as File:
             reader = csv.reader(File)
             for row in reader:
-                print(row)
                 content.append(row)
         return content
 
@@ -38,10 +37,13 @@ class Command(BaseCommand):
         doc.parse_syntax(syntax_parser)
         doc.tag_ner(ner_tagger)
 
+        print(sentence)
         for token in doc.tokens:
             if token.pos in ['X', 'NOUN', 'ADJ']:
                 token.lemmatize(morph_vocab)
                 nouns.append(token.lemma)
+            else:
+                print(token, token.pos)
         return nouns
 
     def handle(self, *args, **options):
@@ -74,8 +76,6 @@ class Command(BaseCommand):
 
         blocks.append(merged.groupby(titles[0]).mean(titles[-1]))
         blocks.append(merged.groupby(titles[1]).mean(titles[-1]))
-        blocks.append(merged.groupby(titles[2]).mean(titles[-1]))
-
         for block in blocks:
             for line in block.iterrows():
                 name, rating = line
@@ -88,4 +88,18 @@ class Command(BaseCommand):
                     keyword, _ = Keyword.objects.get_or_create(title=lemma)
                     course.keywords.add(keyword)
                     course.save()
-                    print(lemma)
+
+        blocks = merged.groupby(titles[2]).mean(titles[-1])
+
+        for block in blocks:
+            for line in block.iterrows():
+                name, rating = line
+                course, _ = Course.objects.get_or_create(title=name)
+                course.avg_score = rating[0]
+                course.semester = 8
+                course.save()
+
+                for lemma in self.get_lemmas(name):
+                    keyword, _ = Keyword.objects.get_or_create(title=lemma)
+                    course.keywords.add(keyword)
+                    course.save()

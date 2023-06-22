@@ -19,6 +19,7 @@ export const Main = (): JSX.Element => {
     const handleChange = (value: string[]) => {
         setSelected(value)
     };
+    
     const columns = useMemo(
         () =>
             [
@@ -74,7 +75,7 @@ export const Main = (): JSX.Element => {
                     sorter: (a, b) => a?.teacher?.name?.localeCompare(b?.teacher?.name),
                 },
                 {
-                    title: 'Средний балл',
+                    title: 'Проходной балл',
                     dataIndex: 'avgScore',
                     width: '15%',
                     render: function renderavgScore(value, record) {
@@ -106,42 +107,42 @@ export const Main = (): JSX.Element => {
                         return (
                             record.space_left > 10 ? (
                                 <p>
-                                    <Text type="success">{record.space_left}</Text> из {record.max_students_count}
+                                    <Text type="success">{record.space_left}</Text>
                                 </p>
                             ) : (
                                 record.space_left === 0 ? (
                                     <p>
-                                        <Text type="danger">{record.space_left}</Text> из {record.max_students_count}
+                                        <Text type="danger">{record.space_left}</Text>
                                     </p>
                                 ) : (
                                     <p>
-                                        <Text type="warning">{record.space_left}</Text> из {record.max_students_count}
+                                        <Text type="warning">{record.space_left}</Text>
                                     </p>
-                                )
-                            )
-                        )
+                    )
+                    )
+                    )
                     },
                     sorter: (a, b) => a.space_left - b.space_left,
                 },
-                {
-                    title: 'Подходит Вам?',
-                    dataIndex: 'is_prediction',
-                    width: '15%',
-                    render: function renderPrediction(value, record) {
-                        return (
-                            record.is_prediction ? (
-                                <p>
-                                    <Text type="success">Да</Text>
-                                </p>
-                            ) : (
-                                <p>
-                                    <Text type="warning">Нет</Text>
-                                </p>
-                            )
-                        )
-                    },
-                    sorter: (a, b) => a.is_prediction,
-                },
+                // {
+                //     title: 'Подходит Вам?',
+                //     dataIndex: 'is_prediction',
+                //     width: '15%',
+                //     render: function renderPrediction(value, record) {
+                //         return (
+                //             record.is_prediction ? (
+                //                 <p>
+                //                     <Text type="success">Да</Text>
+                //                 </p>
+                //             ) : (
+                //                 <p>
+                //                     <Text type="warning">Нет</Text>
+                //                 </p>
+                //             )
+                //         )
+                //     },
+                //     sorter: (a, b) => a.is_prediction,
+                // },
                 {
                     title: '',
                     dataIndex: 'more',
@@ -156,29 +157,35 @@ export const Main = (): JSX.Element => {
                     title: '',
                     dataIndex: 'join',
                     render: function renderJoin(value, record) {
-                        let isAnySelected = selected.length > 0;
-                        // @ts-ignore
-                        let isCurrentSelected = record.keywords.map(item => item.id).filter(x => selected.includes(x)).length > 0
-
-                        return (record.space_left === 0 ?
-                                (<Button danger type="primary">
+                        return (record.is_disabled ?
+                                (<Button disabled={record.is_disabled}>
                                     Включить в план
                                 </Button>)
                                 :
-                                (record.semester < user.profile.semester ?
-                                    (<Button disabled={record.is_disabled}>
+                                (record.is_bad ?
+                                    (<Button danger type="primary" onClick={() => {
+                                        chooseCourse(record.id);
+                                        handleUpdate()
+                                    }}>
                                         Включить в
                                         план</Button>) : (
-                                        (record.avg_score >= user.profile.avg_score) || (isAnySelected && !isCurrentSelected) ?
-                                            (<Button type="primary"
-                                                     style={{background: "#fadb14", color: 'black'}}
-                                                     onClick={() => {chooseCourse(record.id); handleUpdate()}}>
-                                                Включить в
-                                                план</Button>) :
-                                            <Button danger={record.space_left === 0}
+                                        (record.is_good) ?
+                                            (
+                                                <Button
                                                     type="primary"
                                                     style={{background: "#389e0d"}}
-                                                    onClick={() => {chooseCourse(record.id); handleUpdate()}}>Включить в
+                                                    onClick={() => {
+                                                        chooseCourse(record.id);
+                                                        handleUpdate()
+                                                    }}>Включить в
+                                                    план</Button>) :
+                                            <Button type="primary"
+                                                    style={{background: "#fadb14", color: 'black'}}
+                                                    onClick={() => {
+                                                        chooseCourse(record.id);
+                                                        handleUpdate()
+                                                    }}>
+                                                Включить в
                                                 план</Button>))
                         )
                     },
@@ -186,7 +193,8 @@ export const Main = (): JSX.Element => {
             ] as ColumnsType<Course>,
         [selected],
     );
-    function handleUpdate(){
+
+    function handleUpdate() {
         setLoading(true);
         getCourses();
         fetchKeywords();
@@ -211,6 +219,7 @@ export const Main = (): JSX.Element => {
         fetchData();
         setLoading(false);
     }
+
     useEffect(() => {
         setLoading(true);
         getCourses();

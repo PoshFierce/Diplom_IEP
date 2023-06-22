@@ -50,9 +50,10 @@ class CourseViewSet(viewsets.ViewSet):
         elif request.user.is_authenticated:
             plan = IndividualPlan.objects.get(user=request.user)
             plan_courses = list(plan.courses.values_list('id', flat=True))
-            queryset = Course.objects.filter(Q(is_mandatory=True) | Q(id__in=plan_courses))
+            queryset = Course.objects.filter(id__in=plan_courses)
 
-        serializer = CourseSerializer(queryset, many=True, context={'request': request, 'predictions': predictions})
+        serializer = CourseSerializer(queryset.distinct(), many=True,
+                                      context={'request': request, 'predictions': predictions})
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
