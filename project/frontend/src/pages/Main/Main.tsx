@@ -19,7 +19,7 @@ export const Main = (): JSX.Element => {
     const handleChange = (value: string[]) => {
         setSelected(value)
     };
-    
+
     const columns = useMemo(
         () =>
             [
@@ -85,7 +85,7 @@ export const Main = (): JSX.Element => {
                                     <Text type="success">{record.avg_score}</Text>
                                 </p>
                             ) : (
-                                user.profile.avg_score - record.avg_score < 1 ? (
+                                user.profile.avg_score < record.avg_score ? (
                                     <p>
                                         <Text type="danger">{record.avg_score}</Text>
                                     </p>

@@ -28,7 +28,7 @@ class CourseSerializer(serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True)
 
     def get_is_good(self, obj):
-        predictions = self.context['predictions']
+        predictions = self.context.get('predictions', [])
         return obj.title in predictions
 
     def get_is_disabled(self, obj):
@@ -45,7 +45,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_is_bad(self, obj):
         user = self.context['request'].user
         if user.studentprofile:
-            return obj.avg_score > user.studentprofile.avg_score
+            return obj.avg_score >= user.studentprofile.avg_score
 
     class Meta:
         model = Course
